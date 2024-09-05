@@ -62,7 +62,11 @@
         // Вход через Google
         loginBtn.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
+            auth.signInWithPopup(provider).then((result) => {
+                console.log("Пользователь авторизован:", result.user.displayName);
+            }).catch((error) => {
+                console.error("Ошибка авторизации:", error);
+            });
         });
 
         // Выход
