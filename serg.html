@@ -62,11 +62,7 @@
         // Вход через Google
         loginBtn.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then((result) => {
-                console.log("Пользователь авторизован:", result.user.displayName);
-            }).catch((error) => {
-                console.error("Ошибка авторизации:", error);
-            });
+            auth.signInWithPopup(provider);
         });
 
         // Выход
@@ -106,6 +102,16 @@
                 console.error("Ошибка при добавлении: ", error);
             });
         });
+        document.getElementById('login-btn').addEventListener('click', () => {
+            console.log("Кнопка нажата");
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider).then((result) => {
+                console.log("Авторизация успешна:", result.user);
+            }).catch((error) => {
+                console.error("Ошибка авторизации:", error);
+            });
+});
+
     </script>
 </body>
 </html>
