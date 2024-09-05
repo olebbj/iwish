@@ -6,38 +6,98 @@
     <title>Список подарков</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
+
+        .card-container {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #333;
+        }
+
+        .wish-list, .reserved-list {
+            margin-top: 20px;
+        }
+
         .wish-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            justify-content: space-between;
         }
+
         .wish-item img {
-            width: 100px;
-            height: 100px;
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
             margin-right: 10px;
         }
-        .reserved img {
+
+        .wish-item.reserved img {
             filter: grayscale(100%);
         }
-        button {
-            margin-left: 20px;
+
+        .wish-item button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .wish-item button.cancel {
+            background-color: #dc3545;
+        }
+
+        .wish-item button:hover {
+            background-color: #0056b3;
+        }
+
+        .wish-item button.cancel:hover {
+            background-color: #c82333;
+        }
+
+        h2 {
+            margin-top: 40px;
+            color: #555;
         }
     </style>
 </head>
 <body>
-    <h1>Список подарков</h1>
+    <div class="card-container">
+        <h1>Приглашаем вас выбрать подарок</h1>
 
-    <div id="wish-list"></div>
-    <h2>Забронировано</h2>
-    <div id="reserved-list"></div>
+        <h2>Доступные подарки</h2>
+        <div class="wish-list" id="wish-list"></div>
 
-    <!-- Firebase App SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
-    <!-- Firebase Firestore SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+        <h2>Забронированные подарки</h2>
+        <div class="reserved-list" id="reserved-list"></div>
+    </div>
+
+    <!-- Firebase App SDK (compat mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <!-- Firebase Firestore SDK (compat mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
     <script>
         // Firebase конфигурация (замени на свою)
@@ -57,52 +117,75 @@
         const wishListDiv = document.getElementById('wish-list');
         const reservedListDiv = document.getElementById('reserved-list');
 
-        // Загрузка хотелок из Firestore
-        db.collection("wishes").onSnapshot((snapshot) => {
+        // Загрузка хотелок
+        function loadWishes() {
             wishListDiv.innerHTML = '';
             reservedListDiv.innerHTML = '';
 
-            snapshot.forEach((doc) => {
-                const wish = doc.data();
-                const wishDiv = document.createElement('div');
-                wishDiv.classList.add('wish-item');
-                if (wish.reserved) {
-                    wishDiv.classList.add('reserved');
-                }
+            db.collection("wishes").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const wish = doc.data();
+                    const wishId = doc.id;
 
-                wishDiv.innerHTML = `
+                    const wishItemDiv = document.createElement('div');
+                    wishItemDiv.classList.add('wish-item');
+                    if (wish.reserved) {
+                        wishItemDiv.classList.add('reserved');
+                        reservedListDiv.appendChild(createWishItem(wish, wishId, true));
+                    } else {
+                        wishListDiv.appendChild(createWishItem(wish, wishId, false));
+                    }
+                });
+            }).catch((error) => {
+                console.error("Ошибка при загрузке хотелок: ", error);
+            });
+        }
+
+        // Создание элемента хотелки
+        function createWishItem(wish, wishId, isReserved) {
+            const wishItemDiv = document.createElement('div');
+            wishItemDiv.classList.add('wish-item');
+
+            if (isReserved) {
+                wishItemDiv.classList.add('reserved');
+            }
+
+            const wishContent = `
+                <div class="wish-details">
                     <img src="${wish.image}" alt="${wish.name}">
                     <div>
                         <h3>${wish.name}</h3>
                         <p>Цена: ${wish.price} руб.</p>
                     </div>
-                    <button ${wish.reserved ? 'disabled' : ''} onclick="reserveWish('${doc.id}', ${wish.reserved})">
-                        ${wish.reserved ? 'Забронировано' : 'Забронировать'}
+                </div>
+                <div class="wish-actions">
+                    <button class="${isReserved ? 'cancel' : ''}" onclick="toggleReserved('${wishId}', ${isReserved})">
+                        ${isReserved ? 'Снять бронь' : 'Забронировать'}
                     </button>
-                `;
+                </div>
+            `;
 
-                if (wish.reserved) {
-                    reservedListDiv.appendChild(wishDiv);
-                } else {
-                    wishListDiv.appendChild(wishDiv);
-                }
-            });
-        });
+            wishItemDiv.innerHTML = wishContent;
+            return wishItemDiv;
+        }
 
-        // Бронирование подарка
-        function reserveWish(wishId, isReserved) {
-            if (isReserved) return;
-            const confirmReserve = confirm("Вы действительно хотите забронировать этот подарок?");
-            if (confirmReserve) {
-                db.collection("wishes").doc(wishId).update({
-                    reserved: true
+        // Функция для изменения статуса "Забронировано"
+        function toggleReserved(id, currentStatus) {
+            const newStatus = !currentStatus;
+            const confirmation = currentStatus ? confirm("Вы уверены, что хотите снять бронь?") : confirm("Вы уверены, что хотите забронировать этот подарок?");
+            if (confirmation) {
+                db.collection("wishes").doc(id).update({
+                    reserved: newStatus
                 }).then(() => {
-                    alert("Подарок забронирован!");
+                    loadWishes(); // Обновляем список после изменения
                 }).catch((error) => {
-                    console.error("Ошибка при бронировании: ", error);
+                    console.error("Ошибка при изменении статуса бронирования: ", error);
                 });
             }
         }
+
+        // Загрузка данных при открытии страницы
+        loadWishes();
     </script>
 </body>
 </html>
