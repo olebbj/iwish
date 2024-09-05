@@ -9,7 +9,7 @@
             font-family: 'Courier New', Courier, monospace;
             background-color: #f8f9fa;
             margin: 0;
-            padding: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,7 +21,7 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             border-radius: 10px;
             padding: 30px;
-            max-width: 600px;
+            max-width: 900px;
             width: 100%;
             text-align: center;
         }
@@ -31,24 +31,30 @@
         }
 
         .wish-list, .reserved-list {
-            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
         }
 
         .wish-item {
             border: 1px solid #e0e0e0;
             border-radius: 10px;
             padding: 10px;
-            margin-bottom: 15px;
+            width: calc(50% - 15px);
+            box-sizing: border-box;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: space-between;
         }
 
         .wish-item img {
-            width: 80px;
-            height: 80px;
+            width: 100%;
+            max-width: 180px;
+            height: auto;
             border-radius: 8px;
-            margin-right: 10px;
+            margin-bottom: 10px;
         }
 
         .wish-item.reserved img {
@@ -93,6 +99,17 @@
             text-align: center;
             font-size: 18px;
             color: #666;
+        }
+
+        /* Мобильные стили */
+        @media (max-width: 768px) {
+            .wish-item {
+                width: calc(100% - 15px);
+            }
+
+            .wish-item img {
+                max-width: 150px;
+            }
         }
     </style>
 </head>
