@@ -17,11 +17,13 @@
 <body>
     <h1>Добавить новую хотелку</h1>
 
+    <!-- Раздел для кнопок авторизации -->
     <div id="auth-section">
         <button id="login-btn">Войти через Google</button>
         <button id="logout-btn" class="hidden">Выйти</button>
     </div>
 
+    <!-- Форма добавления хотелок, которая скрыта до авторизации -->
     <div id="add-wish-form" class="hidden">
         <h2>Форма добавления</h2>
         <form id="wish-form">
@@ -55,6 +57,7 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // Элементы управления
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const addWishForm = document.getElementById('add-wish-form');
@@ -62,21 +65,31 @@
         // Вход через Google
         loginBtn.addEventListener('click', () => {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
+            auth.signInWithPopup(provider).then((result) => {
+                console.log("Пользователь авторизован:", result.user.displayName);
+            }).catch((error) => {
+                console.error("Ошибка авторизации:", error);
+            });
         });
 
         // Выход
         logoutBtn.addEventListener('click', () => {
-            auth.signOut();
+            auth.signOut().then(() => {
+                console.log("Выход выполнен");
+            }).catch((error) => {
+                console.error("Ошибка выхода:", error);
+            });
         });
 
         // Обновление UI в зависимости от состояния авторизации
         auth.onAuthStateChanged(user => {
             if (user) {
+                console.log("Пользователь авторизован:", user.displayName);
                 loginBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
                 addWishForm.classList.remove('hidden');
             } else {
+                console.log("Пользователь не авторизован");
                 loginBtn.classList.remove('hidden');
                 logoutBtn.classList.add('hidden');
                 addWishForm.classList.add('hidden');
@@ -102,16 +115,6 @@
                 console.error("Ошибка при добавлении: ", error);
             });
         });
-        document.getElementById('login-btn').addEventListener('click', () => {
-            console.log("Кнопка нажата");
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider).then((result) => {
-                console.log("Авторизация успешна:", result.user);
-            }).catch((error) => {
-                console.error("Ошибка авторизации:", error);
-            });
-});
-
     </script>
 </body>
 </html>
