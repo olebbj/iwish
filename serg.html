@@ -64,6 +64,7 @@
 
         // Вход через Google
         loginBtn.addEventListener('click', () => {
+            console.log("Кнопка нажата");
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then((result) => {
                 console.log("Пользователь авторизован:", result.user.displayName);
