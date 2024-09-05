@@ -12,6 +12,23 @@
         .hidden {
             display: none;
         }
+        .wish-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .wish-item h3 {
+            margin: 0;
+        }
+        .wish-item a {
+            display: block;
+            margin-top: 5px;
+            color: blue;
+            text-decoration: underline;
+        }
+        .wish-item button {
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
@@ -30,9 +47,13 @@
             <input type="text" id="wish-name" placeholder="Название подарка" required>
             <input type="text" id="wish-image" placeholder="Ссылка на изображение" required>
             <input type="number" id="wish-price" placeholder="Цена" required>
+            <input type="text" id="wish-link" placeholder="Ссылка на покупку" required>
             <button type="submit">Добавить</button>
         </form>
     </div>
+
+    <h2>Список хотелок</h2>
+    <div id="wish-list"></div>
 
     <!-- Firebase App SDK (compat mode) -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
@@ -61,10 +82,10 @@
         const loginBtn = document.getElementById('login-btn');
         const logoutBtn = document.getElementById('logout-btn');
         const addWishForm = document.getElementById('add-wish-form');
+        const wishListDiv = document.getElementById('wish-list');
 
         // Вход через Google
         loginBtn.addEventListener('click', () => {
-            console.log("Кнопка нажата");
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then((result) => {
                 console.log("Пользователь авторизован:", result.user.displayName);
@@ -89,11 +110,13 @@
                 loginBtn.classList.add('hidden');
                 logoutBtn.classList.remove('hidden');
                 addWishForm.classList.remove('hidden');
+                loadWishes(); // Загружаем хотелки при авторизации
             } else {
                 console.log("Пользователь не авторизован");
                 loginBtn.classList.remove('hidden');
                 logoutBtn.classList.add('hidden');
                 addWishForm.classList.add('hidden');
+                wishListDiv.innerHTML = ''; // Очищаем список при выходе
             }
         });
 
@@ -103,19 +126,82 @@
             const wishName = document.getElementById('wish-name').value;
             const wishImage = document.getElementById('wish-image').value;
             const wishPrice = document.getElementById('wish-price').value;
+            const wishLink = document.getElementById('wish-link').value;
 
             db.collection("wishes").add({
                 name: wishName,
                 image: wishImage,
                 price: wishPrice,
+                link: wishLink,
                 reserved: false
             }).then(() => {
                 alert("Хотелка добавлена!");
                 document.getElementById('wish-form').reset();
+                loadWishes(); // Обновляем список хотелок после добавления
             }).catch((error) => {
                 console.error("Ошибка при добавлении: ", error);
             });
         });
+
+        // Функция для загрузки всех хотелок
+        function loadWishes() {
+            wishListDiv.innerHTML = ''; // Очищаем список перед загрузкой
+            db.collection("wishes").get().then((querySnapshot) => {
+                querySnapshot.forEach((doc) => {
+                    const wish = doc.data();
+                    const wishId = doc.id;
+                    const wishItemDiv = document.createElement('div');
+                    wishItemDiv.classList.add('wish-item');
+
+                    wishItemDiv.innerHTML = `
+                        <h3>${wish.name}</h3>
+                        <img src="${wish.image}" alt="${wish.name}" width="100">
+                        <p>Цена: ${wish.price} руб.</p>
+                        <a href="${wish.link}" target="_blank">Перейти к покупке</a>
+                        <button onclick="editWish('${wishId}', '${wish.name}', '${wish.image}', '${wish.price}', '${wish.link}')">Редактировать</button>
+                        <button onclick="deleteWish('${wishId}')">Удалить</button>
+                    `;
+
+                    wishListDiv.appendChild(wishItemDiv);
+                });
+            }).catch((error) => {
+                console.error("Ошибка при загрузке хотелок: ", error);
+            });
+        }
+
+        // Функция для редактирования хотелки
+        function editWish(id, name, image, price, link) {
+            const newName = prompt("Новое название подарка:", name);
+            const newImage = prompt("Новая ссылка на изображение:", image);
+            const newPrice = prompt("Новая цена:", price);
+            const newLink = prompt("Новая ссылка на покупку:", link);
+
+            if (newName && newImage && newPrice && newLink) {
+                db.collection("wishes").doc(id).update({
+                    name: newName,
+                    image: newImage,
+                    price: newPrice,
+                    link: newLink
+                }).then(() => {
+                    alert("Хотелка обновлена!");
+                    loadWishes(); // Обновляем список после редактирования
+                }).catch((error) => {
+                    console.error("Ошибка при обновлении хотелки: ", error);
+                });
+            }
+        }
+
+        // Функция для удаления хотелки
+        function deleteWish(id) {
+            if (confirm("Вы уверены, что хотите удалить эту хотелку?")) {
+                db.collection("wishes").doc(id).delete().then(() => {
+                    alert("Хотелка удалена!");
+                    loadWishes(); // Обновляем список после удаления
+                }).catch((error) => {
+                    console.error("Ошибка при удалении хотелки: ", error);
+                });
+            }
+        }
     </script>
 </body>
 </html>
