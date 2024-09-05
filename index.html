@@ -151,23 +151,28 @@
         const wishListDiv = document.getElementById('wish-list');
         const reservedListDiv = document.getElementById('reserved-list');
 
-        // Загрузка хотелок
+        // Загрузка хотелок и сортировка по алфавиту
         function loadWishes() {
             wishListDiv.innerHTML = '';
             reservedListDiv.innerHTML = '';
 
             db.collection("wishes").get().then((querySnapshot) => {
+                const wishes = [];
                 querySnapshot.forEach((doc) => {
                     const wish = doc.data();
-                    const wishId = doc.id;
+                    wish.id = doc.id;
+                    wishes.push(wish);
+                });
 
+                // Сортировка по имени подарка (по алфавиту)
+                wishes.sort((a, b) => a.name.localeCompare(b.name));
+
+                wishes.forEach((wish) => {
                     const wishItemDiv = document.createElement('div');
-                    wishItemDiv.classList.add('wish-item');
                     if (wish.reserved) {
-                        wishItemDiv.classList.add('reserved');
-                        reservedListDiv.appendChild(createWishItem(wish, wishId, true));
+                        reservedListDiv.appendChild(createWishItem(wish, true));
                     } else {
-                        wishListDiv.appendChild(createWishItem(wish, wishId, false));
+                        wishListDiv.appendChild(createWishItem(wish, false));
                     }
                 });
             }).catch((error) => {
@@ -176,7 +181,7 @@
         }
 
         // Создание элемента хотелки
-        function createWishItem(wish, wishId, isReserved) {
+        function createWishItem(wish, isReserved) {
             const wishItemDiv = document.createElement('div');
             wishItemDiv.classList.add('wish-item');
 
@@ -184,17 +189,20 @@
                 wishItemDiv.classList.add('reserved');
             }
 
+            // Кнопка "Пример товара" только если ссылка на товар не пуста
+            const linkContent = wish.link ? `<a href="${wish.link}" target="_blank">Пример товара</a>` : '';
+
             const wishContent = `
                 <div class="wish-details">
                     <img src="${wish.image}" alt="${wish.name}">
                     <div>
                         <h3>${wish.name}</h3>
                         <p>Цена: ${wish.price} руб.</p>
-                        <a href="${wish.link}" target="_blank">Пример товара</a>
+                        ${linkContent}
                     </div>
                 </div>
                 <div class="wish-actions">
-                    <button class="${isReserved ? 'cancel' : ''}" onclick="toggleReserved('${wishId}', ${isReserved})">
+                    <button class="${isReserved ? 'cancel' : ''}" onclick="toggleReserved('${wish.id}', ${isReserved})">
                         ${isReserved ? 'Снять бронь' : 'Забронировать'}
                     </button>
                 </div>
