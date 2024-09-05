@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Добавление хотелок</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Добавить новую хотелку</h1>
+
+    <div id="auth-section">
+        <button id="login-btn">Войти через Google</button>
+        <button id="logout-btn" class="hidden">Выйти</button>
+    </div>
+
+    <div id="add-wish-form" class="hidden">
+        <h2>Форма добавления</h2>
+        <form id="wish-form">
+            <input type="text" id="wish-name" placeholder="Название подарка" required>
+            <input type="text" id="wish-image" placeholder="Ссылка на изображение" required>
+            <input type="number" id="wish-price" placeholder="Цена" required>
+            <button type="submit">Добавить</button>
+        </form>
+    </div>
+
+    <!-- Firebase App SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js"></script>
+    <!-- Firebase Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase конфигурация (замени на свою)
+        const firebaseConfig = {
+              apiKey: "AIzaSyCg9uTSh_kcQ0GjoKLtf-ctYvoLaqzlpRg",
+              authDomain: "iwish-888a3.firebaseapp.com",
+              databaseURL: "https://iwish-888a3-default-rtdb.europe-west1.firebasedatabase.app",
+              projectId: "iwish-888a3",
+              storageBucket: "iwish-888a3.appspot.com",
+              messagingSenderId: "1002045753640",
+              appId: "1:1002045753640:web:0617e7fc9706e51e6da81d",
+              measurementId: "G-FY3LV6LD4D"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const addWishForm = document.getElementById('add-wish-form');
+
+        // Вход через Google
+        loginBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider);
+        });
+
+        // Выход
+        logoutBtn.addEventListener('click', () => {
+            auth.signOut();
+        });
+
+        // Обновление UI в зависимости от состояния авторизации
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                loginBtn.classList.add('hidden');
+                logoutBtn.classList.remove('hidden');
+                addWishForm.classList.remove('hidden');
+            } else {
+                loginBtn.classList.remove('hidden');
+                logoutBtn.classList.add('hidden');
+                addWishForm.classList.add('hidden');
+            }
+        });
+
+        // Добавление новой хотелки в Firestore
+        document.getElementById('wish-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const wishName = document.getElementById('wish-name').value;
+            const wishImage = document.getElementById('wish-image').value;
+            const wishPrice = document.getElementById('wish-price').value;
+
+            db.collection("wishes").add({
+                name: wishName,
+                image: wishImage,
+                price: wishPrice,
+                reserved: false
+            }).then(() => {
+                alert("Хотелка добавлена!");
+                document.getElementById('wish-form').reset();
+            }).catch((error) => {
+                console.error("Ошибка при добавлении: ", error);
+            });
+        });
+    </script>
+</body>
+</html>
