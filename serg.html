@@ -29,6 +29,9 @@
         .wish-item button {
             margin-right: 10px;
         }
+        .reserved {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
@@ -152,13 +155,20 @@
                     const wishId = doc.id;
                     const wishItemDiv = document.createElement('div');
                     wishItemDiv.classList.add('wish-item');
+                    if (wish.reserved) {
+                        wishItemDiv.classList.add('reserved');
+                    }
 
                     wishItemDiv.innerHTML = `
                         <h3>${wish.name}</h3>
                         <img src="${wish.image}" alt="${wish.name}" width="100">
                         <p>Цена: ${wish.price} руб.</p>
                         <a href="${wish.link}" target="_blank">Перейти к покупке</a>
-                        <button onclick="editWish('${wishId}', '${wish.name}', '${wish.image}', '${wish.price}', '${wish.link}')">Редактировать</button>
+                        <p>Забронировано: ${wish.reserved ? 'Да' : 'Нет'}</p>
+                        <button onclick="toggleReserved('${wishId}', ${wish.reserved})">
+                            ${wish.reserved ? 'Снять бронь' : 'Забронировать'}
+                        </button>
+                        <button onclick="editWish('${wishId}', '${wish.name}', '${wish.image}', '${wish.price}', '${wish.link}', ${wish.reserved})">Редактировать</button>
                         <button onclick="deleteWish('${wishId}')">Удалить</button>
                     `;
 
@@ -170,18 +180,20 @@
         }
 
         // Функция для редактирования хотелки
-        function editWish(id, name, image, price, link) {
+        function editWish(id, name, image, price, link, reserved) {
             const newName = prompt("Новое название подарка:", name);
             const newImage = prompt("Новая ссылка на изображение:", image);
             const newPrice = prompt("Новая цена:", price);
             const newLink = prompt("Новая ссылка на покупку:", link);
+            const newReserved = confirm("Хотите забронировать этот подарок?") ? true : reserved;
 
             if (newName && newImage && newPrice && newLink) {
                 db.collection("wishes").doc(id).update({
                     name: newName,
                     image: newImage,
                     price: newPrice,
-                    link: newLink
+                    link: newLink,
+                    reserved: newReserved
                 }).then(() => {
                     alert("Хотелка обновлена!");
                     loadWishes(); // Обновляем список после редактирования
@@ -189,6 +201,19 @@
                     console.error("Ошибка при обновлении хотелки: ", error);
                 });
             }
+        }
+
+        // Функция для изменения статуса "Забронировано"
+        function toggleReserved(id, currentStatus) {
+            const newStatus = !currentStatus;
+            db.collection("wishes").doc(id).update({
+                reserved: newStatus
+            }).then(() => {
+                alert(`Статус бронирования изменён на: ${newStatus ? 'Забронировано' : 'Не забронировано'}`);
+                loadWishes(); // Обновляем список после изменения
+            }).catch((error) => {
+                console.error("Ошибка при изменении статуса бронирования: ", error);
+            });
         }
 
         // Функция для удаления хотелки
