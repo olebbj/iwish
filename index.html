@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>I wish</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        .filter {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .wish-list, .reserved-list {
+            margin: 20px auto;
+            max-width: 600px;
+        }
+        .category {
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .wish-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        .reserved {
+            text-decoration: line-through;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h1>Мой День Рождения</h1>
+    <h2>Дата: 25 сентября 2024</h2>
+    <h2>День празднования: 28 сентября 2024</h2>
+    <h2>Место празднования: у нас дома :)</h2>
+
+    <div class="filter">
+        <label for="price-filter">Фильтр по цене: </label>
+        <input type="number" id="price-filter" placeholder="Введите макс. цену">
+        <button onclick="filterByPrice()">Фильтровать</button>
+    </div>
+
+    <div class="wish-list">
+        <h2>Мои хотелки</h2>
+
+        <div class="category">Техника</div>
+        <div class="wish-item" data-price="15000" data-id="1">
+            <span>Смартфон - 15,000 руб</span>
+            <input type="checkbox" onchange="reserveItem(this)">
+        </div>
+        <div class="wish-item" data-price="3000" data-id="2">
+            <span>Наушники - 3,000 руб</span>
+            <input type="checkbox" onchange="reserveItem(this)">
+        </div>
+
+        <div class="category">Одежда</div>
+        <div class="wish-item" data-price="5000" data-id="3">
+            <span>Куртка - 5,000 руб</span>
+            <input type="checkbox" onchange="reserveItem(this)">
+        </div>
+        <div class="wish-item" data-price="2000" data-id="4">
+            <span>Шарф - 2,000 руб</span>
+            <input type="checkbox" onchange="reserveItem(this)">
+        </div>
+    </div>
+
+    <div class="reserved-list">
+        <h2>Забронировано</h2>
+    </div>
+
+    <!-- Firebase App SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <!-- Firebase Firestore SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+
+    <script>
+        // Firebase конфигурация (замени своими данными)
+        const firebaseConfig = {
+              apiKey: "AIzaSyCg9uTSh_kcQ0GjoKLtf-ctYvoLaqzlpRg",
+              authDomain: "iwish-888a3.firebaseapp.com",
+              databaseURL: "https://iwish-888a3-default-rtdb.europe-west1.firebasedatabase.app",
+              projectId: "iwish-888a3",
+              storageBucket: "iwish-888a3.appspot.com",
+              messagingSenderId: "1002045753640",
+              appId: "1:1002045753640:web:0617e7fc9706e51e6da81d",
+              measurementId: "G-FY3LV6LD4D"
+        };
+
+        // Инициализация Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Сохранение данных в Firestore при бронировании хотелки
+        function reserveItem(checkbox) {
+            const item = checkbox.parentElement;
+            const itemId = item.getAttribute('data-id');
+            const itemName = item.querySelector('span').textContent;
+            const isChecked = checkbox.checked;
+
+            if (isChecked) {
+                // Добавить забронированную хотелку в Firestore
+                db.collection("reservedWishes").doc(itemId).set({
+                    name: itemName,
+                    id: itemId
+                }).then(() => {
+                    console.log("Забронировано: " + itemName);
+                    item.classList.add('reserved');
+                    document.querySelector('.reserved-list').appendChild(item);
+                }).catch((error) => {
+                    console.error("Ошибка: ", error);
+                });
+            } else {
+                // Убрать из списка забронированных
+                db.collection("reservedWishes").doc(itemId).delete().then(() => {
+                    console.log("Освобождено: " + itemName);
+                    item.classList.remove('reserved');
+                    document.querySelector('.wish-list').appendChild(item);
+                }).catch((error) => {
+                    console.error("Ошибка: ", error);
+                });
+            }
+        }
+
+        // Чтение данных из Firestore
+        db.collection("reservedWishes").get().then((querySnapshot) => {
+            querySnapshot.forEach((doc) => {
+                const itemId = doc.data().id;
+                const reservedItem = document.querySelector(`[data-id="${itemId}"]`);
+                if (reservedItem) {
+                    reservedItem.classList.add('reserved');
+                    reservedItem.querySelector('input').checked = true;
+                    document.querySelector('.reserved-list').appendChild(reservedItem);
+                }
+            });
+        });
+
+        // Фильтрация по цене
+        function filterByPrice() {
+            const maxPrice = document.getElementById('price-filter').value;
+            const items = document.querySelectorAll('.wish-item');
+
+            items.forEach(item => {
+                const price = parseInt(item.getAttribute('data-price'));
+                if (maxPrice && price > maxPrice) {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'flex';
+                }
+            });
+        }
+    </script>
+</body>
+</html>
