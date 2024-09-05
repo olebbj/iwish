@@ -13,7 +13,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
         }
 
         .card-container {
@@ -26,8 +26,7 @@
             text-align: center;
         }
 
-        h1 {
-            font-size: 2rem;
+        h1, h3, p {
             color: #333;
         }
 
@@ -77,15 +76,33 @@
             background-color: #c82333;
         }
 
+        .wish-item a {
+            display: block;
+            margin-top: 5px;
+            color: #007bff;
+            text-decoration: underline;
+        }
+
         h2 {
             margin-top: 40px;
             color: #555;
+        }
+
+        .birthday-info {
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 18px;
+            color: #666;
         }
     </style>
 </head>
 <body>
     <div class="card-container">
-        <h1>Приглашаем вас выбрать подарок</h1>
+        <h1>Приглашаю вас на свой день рождения!</h1>
+        <div class="birthday-info">
+            <p>Встреча пройдет 28 сентября у нас дома.</p>
+            <p>Жду всех с нетерпением!</p>
+        </div>
 
         <h2>Доступные подарки</h2>
         <div class="wish-list" id="wish-list"></div>
@@ -156,6 +173,7 @@
                     <div>
                         <h3>${wish.name}</h3>
                         <p>Цена: ${wish.price} руб.</p>
+                        <a href="${wish.link}" target="_blank">Пример товара</a>
                     </div>
                 </div>
                 <div class="wish-actions">
